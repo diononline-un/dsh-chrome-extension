@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DSH Browser</title>
+    <style>
+      :root { color-scheme: light dark; font: 13px/1.5 system-ui, sans-serif; }
+      body { margin: 0; padding: 12px; }
+      h1 { font-size: 14px; margin: 0 0 8px; display: flex; align-items: center; gap: 6px; }
+      .dot { width: 9px; height: 9px; border-radius: 50%; background: #999; }
+      .dot.on { background: #16a34a; }
+      .dot.off { background: #dc2626; }
+      section { border: 1px solid color-mix(in srgb, currentColor 15%, transparent); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+      .muted { opacity: .7; }
+      button { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); background: transparent; cursor: pointer; }
+      button.active { background: #0891b2; color: #fff; border-color: #0891b2; }
+      label.row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+      ul { list-style: none; margin: 4px 0 0; padding: 0; }
+      li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 2px 0; }
+      .log { max-height: 160px; overflow: auto; font-family: ui-monospace, monospace; font-size: 11px; }
+      .log .bad { color: #dc2626; }
+      .modes { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+      .saved { color: #16a34a; font-size: 11px; margin-left: 6px; }
+      code { font-size: 11px; word-break: break-all; }
+    </style>
+  </head>
+  <body>
+    <h1><span id="dot" class="dot"></span> DSH Browser <span id="browser" class="muted"></span></h1>
+
+    <section>
+      <div id="status">…</div>
+      <div id="err" class="bad" style="color:#dc2626"></div>
+      <div style="margin-top:6px; display:flex; gap:6px;">
+        <button id="reconnect">Reconnect</button>
+        <button id="detach">Release debugger</button>
+      </div>
+    </section>
+
+    <section>
+      <label class="row"><input type="checkbox" id="paused" /> Pause all automation</label>
+      <div>Mode <span id="modeNow" class="muted"></span><span id="modeSaved" class="saved" hidden>saved ✓</span></div>
+      <div class="modes">
+        <button data-mode="allowlist" class="modeBtn">Allowlist only</button>
+        <button data-mode="ask" class="modeBtn">Ask per site</button>
+        <button data-mode="allow-all" class="modeBtn">Allow all</button>
+      </div>
+    </section>
+
+    <section>
+      <strong>Allowed sites</strong>
+      <div class="muted">Used in <em>allowlist</em> mode, and to pre-approve sites in <em>ask</em> mode. A bare host (<code>example.com</code>) also matches its subdomains.</div>
+      <ul id="allowlist"></ul>
+      <form id="addAllowForm" style="margin-top:6px; display:flex; gap:6px;">
+        <input id="addAllowOrigin" placeholder="https://example.com" style="flex:1; font:inherit; padding:3px 6px;" />
+        <button type="submit">Allow</button>
+      </form>
+    </section>
+
+    <section>
+      <strong>Blocked sites</strong>
+      <div class="muted">Always denied, even in <em>allow-all</em> or <em>ask</em> mode.</div>
+      <ul id="blocklist"></ul>
+      <form id="addBlockForm" style="margin-top:6px; display:flex; gap:6px;">
+        <input id="addBlockOrigin" placeholder="mail.google.com" style="flex:1; font:inherit; padding:3px 6px;" />
+        <button type="submit">Block</button>
+      </form>
+    </section>
+
+    <section>
+      <strong>Automation tabs</strong>
+      <ul id="tabs"><li class="muted">none</li></ul>
+    </section>
+
+    <section>
+      <strong>Recent tool calls</strong>
+      <div id="log" class="log"></div>
+    </section>
+
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

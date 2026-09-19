@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DSH Browser — Options</title>
+    <style>
+      :root { color-scheme: light dark; font: 14px/1.6 system-ui, sans-serif; }
+      body { margin: 0 auto; padding: 24px; max-width: 640px; }
+      h1 { font-size: 18px; }
+      fieldset { border: 1px solid color-mix(in srgb, currentColor 20%, transparent); border-radius: 8px; margin-bottom: 16px; }
+      label { display: block; margin: 8px 0; }
+      input[type="text"], input[type="password"] { font: inherit; padding: 4px 8px; width: 320px; max-width: 100%; }
+      button { font: inherit; padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+      .muted { opacity: .7; font-size: 13px; }
+      code { background: color-mix(in srgb, currentColor 12%, transparent); padding: 1px 4px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>DSH Browser</h1>
+    <p class="muted">Browser automation for DeepSeek Harness. The extension talks to a
+      per-session MCP server that <code>dsh</code> spawns; there is no network port.</p>
+
+    <fieldset>
+      <legend>Pairing token (optional)</legend>
+      <p class="muted">If <code>~/.config/dsh-chrome/config.json</code> sets a <code>token</code>,
+        enter the same value here. Leave empty otherwise.</p>
+      <label><input type="password" id="token" placeholder="(none)" /></label>
+      <button id="saveToken">Save</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Default permission mode</legend>
+      <label><input type="radio" name="mode" value="allowlist" /> Allowlist only — act only on sites you added</label>
+      <label><input type="radio" name="mode" value="ask" /> Ask — prompt the first time each site is used</label>
+      <label><input type="radio" name="mode" value="allow-all" /> Allow all — no per-site checks</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Reset</legend>
+      <button id="reset">Clear allowlist &amp; settings</button>
+    </fieldset>
+
+    <p class="muted">Extension ID: <code id="extid"></code></p>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

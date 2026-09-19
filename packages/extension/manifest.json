@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "DSH Browser",
+  "version": "0.1.0",
+  "description": "Browser automation for DeepSeek Harness (dsh)",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxCScza7SBzZOnnntdKFosUMAaP7y3sC6A58GRcKuyr7BxbXYD/VVWPNCFOftSxUfdrHFoMC2i1wWBc0uQrToFEChRf77QH5WXkvkY6krL0KgpA/Yrf2zK1L8v3nEDuxEf9dNZIZ0UIjmmVh4EX+W9ycEvBzNMVZn8MktHC471R1FOWyGxoG0uwQcF8eWHEesIOtl/NVuEiQPSHNzF+M+dfQ/I0rvFAVhExynPdwBO21swL2EF+gmK+iGv6zDgn2GMuPUYvJ4Ap2lMrBW/P8zMb0D855SQWpnAwg0rY5B06mYOUhM13a80b9BBBihaCM32V04S7ZZD7hUubo8UxDF7wIDAQAB",
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "DSH Browser",
+    "default_icon": { "128": "icons/icon-128.png" }
+  },
+  "icons": { "128": "icons/icon-128.png" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "options_page": "options.html",
+  "commands": {
+    "toggle-side-panel": {
+      "suggested_key": { "default": "Ctrl+Shift+U" },
+      "description": "Toggle the DSH Browser side panel"
+    }
+  },
+  "content_scripts": [
+    {
+      "js": ["content-dom.js"],
+      "matches": ["<all_urls>"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "js": ["content-indicator.js"],
+      "matches": ["<all_urls>"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "scripting",
+    "debugger",
+    "tabs",
+    "tabGroups",
+    "alarms",
+    "notifications",
+    "offscreen",
+    "unlimitedStorage",
+    "nativeMessaging"
+  ],
+  "host_permissions": ["<all_urls>"]
+}

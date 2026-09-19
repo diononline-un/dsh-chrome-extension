@@ -1,0 +1,25 @@
+{
+  "name": "dsh-browser",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser automation for DeepSeek Harness (dsh) — MV3 extension + MCP server, modelled on Claude in Chrome",
+  "license": "MIT",
+  "packageManager": "pnpm@11.3.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "pnpm -r --workspace-concurrency=1 run build",
+    "build:protocol": "pnpm --filter @dsh-browser/protocol run build",
+    "build:mcp": "pnpm --filter @dsh-browser/mcp-server run build",
+    "build:native": "pnpm --filter @dsh-browser/native-host run build",
+    "build:ext": "pnpm --filter @dsh-browser/extension run build",
+    "typecheck": "pnpm -r run typecheck",
+    "install:local": "node scripts/install-local.mjs",
+    "ext-id": "node scripts/ext-id.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

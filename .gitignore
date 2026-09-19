@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.tsbuildinfo
+packages/extension/dist/
+.keys/*.pem
