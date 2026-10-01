@@ -59,16 +59,18 @@ function scheduleReconnect(): void {
 export function connect(): void {
   if (port) return;
   handshakeDone = false;
+  let p: chrome.runtime.Port;
   try {
-    port = chrome.runtime.connectNative(NATIVE_HOST_NAME);
+    p = chrome.runtime.connectNative(NATIVE_HOST_NAME);
   } catch (err) {
     runtime.lastError = `connectNative failed: ${String(err)}`;
     setBridgeConnected(false);
     scheduleReconnect();
     return;
   }
+  port = p;
 
-  port.onMessage.addListener((raw: unknown) => {
+  p.onMessage.addListener((raw: unknown) => {
     const msg = raw as ServerToExtension | { type: "status"; connected: boolean };
     if (msg.type === "welcome") {
       handshakeDone = true;
@@ -76,7 +78,7 @@ export function connect(): void {
       if (!msg.accepted) {
         runtime.lastError = `bridge rejected: ${msg.reason ?? "unknown"}`;
         setBridgeConnected(false);
-        port?.disconnect();
+        p.disconnect();
         return;
       }
       if (msg.protocolVersion !== PROTOCOL_VERSION) {
@@ -88,13 +90,17 @@ export function connect(): void {
     }
     if ((msg as { type: string }).type === "status") {
       // emitted by the native-host while it cannot reach the mcp-server
-      setBridgeConnected(Boolean((msg as { connected: boolean }).connected));
+      const live = Boolean((msg as { connected: boolean }).connected);
+      if (!live) handshakeDone = false;
+      setBridgeConnected(live);
       return;
     }
     void onMessage(msg as ServerToExtension);
   });
 
-  port.onDisconnect.addListener(() => {
+  p.onDisconnect.addListener(() => {
+    // A superseded port (manual reconnect) must not touch the new one's state.
+    if (port !== p) return;
     const err = chrome.runtime.lastError?.message;
     port = null;
     handshakeDone = false;
@@ -108,6 +114,28 @@ export function connect(): void {
   // Kick the handshake; the native-host answers `status` until the socket is up,
   // then relays our hello to the mcp-server which replies `welcome`.
   void sendHello();
+}
+
+/**
+ * Drop the live native port and open a fresh one. `connect()` returns early
+ * while a port exists, so a port whose handshake went stale (native host up,
+ * mcp-server side gone) needs this to redo the `hello`/`welcome` exchange.
+ */
+export function reconnect(): void {
+  const stale = port;
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  port = null;
+  handshakeDone = false;
+  backoffIdx = 0;
+  try {
+    stale?.disconnect();
+  } catch {
+    /* already gone */
+  }
+  connect();
 }
 
 export function initNativePort(): void {

@@ -1,0 +1,20 @@
+
+# mcp-browser aktiv: der mcp-server laeuft auf der VPS und besitzt den UDS.
+# Die lokale Brave-Extension erreicht ihn ueber einen SSH-Tunnel
+# (lokal: Dienst dsh-browser-tunnel.service) auf denselben Socket-Pfad.
+# DSH_CHROME_SOCKET ist gepinnt, weil dsh-web.service kein XDG_RUNTIME_DIR
+# erbt und der Socket sonst unter ~/.local/state/dsh-chrome/ landen wuerde.
+- insert:
+    - id: mcp-browser
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: browser
+        transport: stdio
+        command: /usr/bin/node
+        args:
+          - /home/dsh/dsh-chrome-extension/packages/mcp-server/dist/index.js
+        env:
+          DSH_CHROME_SOCKET: /run/user/1000/dsh-chrome/bridge.sock
+        toolCallTimeoutMs: 120000
+        reconnect:
+          enabled: true

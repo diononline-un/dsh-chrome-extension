@@ -1,0 +1,24 @@
+[Unit]
+Description=DSH Browser bridge tunnel (lokale Browser-Extension -> dsh auf der VPS)
+Documentation=file:///home/dion/Projekte/dsh-chrome-extension/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Ziel-Socket des VPS-mcp-server; der Pfad ist dort per DSH_CHROME_SOCKET
+# gepinnt (siehe deploy/vps/cordis.patch.yml).
+ExecStartPre=/usr/bin/mkdir -p %t/dsh-chrome
+ExecStart=/usr/bin/ssh -N \
+  -o BatchMode=yes \
+  -o ExitOnForwardFailure=yes \
+  -o StreamLocalBindUnlink=yes \
+  -o ServerAliveInterval=15 \
+  -o ServerAliveCountMax=3 \
+  -L %t/dsh-chrome/bridge.sock:/run/user/1000/dsh-chrome/bridge.sock \
+  dsh-vps
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

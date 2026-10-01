@@ -1,0 +1,10 @@
+# Your patch layer for this dsh profile, applied after every bundle layer:
+# a top-level YAML array of loader patch entries (id-targeted config
+# overrides, disables, and insert lists; `!!js` expressions allowed).
+
+# mcp-browser lokal abgeschaltet: der UDS-Pfad
+# /run/user/1000/dsh-chrome/bridge.sock gehoert jetzt dem SSH-Tunnel zum
+# VPS-dsh (Dienst dsh-browser-tunnel.service); Brave wird von dort gesteuert.
+# Zurueck auf lokal: mcp-browser-Row wieder eintragen (siehe
+# deploy/vps/cordis.patch.yml) und den Tunnel stoppen.
+[]

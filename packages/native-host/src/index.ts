@@ -8,9 +8,10 @@
  * the dsh-spawned mcp-server listens on.
  *
  * While the mcp-server is not reachable it answers the extension with a
- * `status: disconnected` frame and keeps retrying. When the socket drops it
- * reports the drop and exits, so the extension's reconnect loop can respawn a
- * fresh host.
+ * `status: disconnected` frame and keeps retrying. A socket that drops and
+ * comes back is re-handshaked with the last `hello` the extension sent, so the
+ * mcp-server knows a browser is attached again without a full extension
+ * reconnect.
  */
 import net from "node:net";
 import {
@@ -41,6 +42,9 @@ let shuttingDown = false;
 /** Frames received from the browser before the socket is ready. */
 const pending: unknown[] = [];
 
+/** Last `hello` seen from the extension, replayed after a socket reconnect. */
+let lastHello: unknown = null;
+
 const browserDecoder = new FrameDecoder();
 const socketDecoder = new FrameDecoder();
 
@@ -61,6 +65,13 @@ function connect(): void {
     socketReady = true;
     reconnectAttempt = 0;
     logStderr("connected to", SOCKET_PATH);
+    // A reconnected socket is a new session for the mcp-server, which only
+    // learns about the extension from its `hello`. Replay it unless the queue
+    // already carries one (fresh start), so the two sides cannot drift apart.
+    const queuedHello = pending.some(
+      (m) => (m as { type?: string } | null)?.type === "hello",
+    );
+    if (!queuedHello && lastHello) s.write(encodeFrame(lastHello));
     flushPending();
   });
 
@@ -116,6 +127,7 @@ process.stdin.on("data", (chunk: Buffer) => {
     return;
   }
   for (const msg of msgs) {
+    if ((msg as { type?: string }).type === "hello") lastHello = msg;
     if (socket && socketReady) {
       socket.write(encodeFrame(msg));
     } else {
