@@ -1,6 +1,6 @@
 /** Service worker entry point. */
 import type { ServerToExtension, ToolResultMessage } from "@dsh-browser/protocol";
-import { initNativePort, setMessageHandler, send } from "./native-port.js";
+import { initNativePort, reconnect, setMessageHandler, send } from "./native-port.js";
 import { runTool } from "./handlers.js";
 import { runtime, getSettings, setSettings, logTool } from "./state.js";
 import { getContext } from "./tabgroup.js";
@@ -80,7 +80,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
         await removeFromBlocklist(msg.origin);
         return { ok: true };
       case "dsh-ui-reconnect":
-        initNativePort();
+        reconnect();
         return { ok: true };
       case "dsh-ui-detach-all":
         await detachAll();
