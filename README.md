@@ -79,7 +79,7 @@ native host stay local. One SSH streamlocal forward joins the two:
 Browser (local) -> native-host (local) -> /run/user/1000/dsh-chrome/bridge.sock (local)
                                              |  ssh -L, unix socket to unix socket
                                              v
-                      /run/user/1000/dsh-chrome/bridge.sock (VPS) <- mcp-server (VPS) <- dsh (VPS)
+                      /home/dsh/.local/state/dsh-chrome/bridge.sock (VPS) <- mcp-server (VPS) <- dsh (VPS)
 ```
 
 1. Copy the repo to the remote host and build the server half:
@@ -95,10 +95,13 @@ Browser (local) -> native-host (local) -> /run/user/1000/dsh-chrome/bridge.sock 
 
 2. Install `deploy/vps/cordis.patch.yml` as the profile patch of every profile
    that should drive the browser (`~/.dsh/profiles/<name>/cordis.patch.yml`,
-   keep a backup). That row pins `DSH_CHROME_SOCKET`, because
-   `dsh-web.service` runs without `XDG_RUNTIME_DIR` and the socket would
-   otherwise land in `~/.local/state/dsh-chrome/` while an `ssh` login of the
-   same user gets `/run/user/1000/dsh-chrome/`.
+   keep a backup). The row pins `DSH_CHROME_SOCKET` to `$HOME`, not to
+   `/run/user/<uid>`. `dsh-web.service` runs without `XDG_RUNTIME_DIR`, so an
+   `ssh` login and the service would disagree about the path; and without
+   active linger systemd deletes the runtime directory when the user's last
+   session ends, which orphans a listening socket instead of failing loudly.
+   The check that catches it: `ls -l` the path on the remote host while the
+   `mcp-server` process is alive.
 3. Install `deploy/local/dsh-browser-tunnel.service` into
    `~/.config/systemd/user/`, change the `dsh-vps` alias if your host differs,
    then `systemctl --user enable --now dsh-browser-tunnel.service`.

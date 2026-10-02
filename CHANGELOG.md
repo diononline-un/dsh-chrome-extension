@@ -1,9 +1,17 @@
 # Changelog
 
+## 2026-10-02 — Socket-Pfad auf $HOME, Ausfall nach Runtime-Abbau behoben
+
+- Ausfallbild am Morgen: Chrome-Sidepanel „Waiting for dsh", Tool-Calls aus der VPS-Session „No browser connected", obwohl der mcp-server lief und der Tunnel stand.
+- Ursache: `DSH_CHROME_SOCKET` zeigte auf `/run/user/1000/dsh-chrome/bridge.sock`. User `dsh` hat kein Linger, systemd hat `/run/user/1000` über Nacht entfernt (heute 07:20 neu angelegt) und damit das Socket-File; der laufende Server lauschte weiter auf einem gelöschten Inode.
+- Fix: Pfad auf `/home/dsh/.local/state/dsh-chrome/bridge.sock` gepinnt (`deploy/vps/cordis.patch.yml`), Tunnel-Ziel in `deploy/local/dsh-browser-tunnel.service` nachgezogen; beide Seiten installiert, frischer mcp-server lauscht dort.
+- Nachweis: `welcome`-Frame über die Tunnelstrecke, `ls -l` des Pfads bei lebendem mcp-server.
+- Lehre: ein gepinnter Socket-Pfad gehört nicht unter `/run/user/<uid>`, solange der Dienst als System-Unit ohne Linger läuft.
+
 ## 2026-10-01 — VPS-Relay: Extension lokal, dsh auf der VPS
 
-- Neuer Betriebsmodus, dokumentiert in `README.md` und `deploy/`: der `mcp-server` läuft als `dsh`-Kind auf der VPS (hermes-vps, Repo unter `/home/dsh/dsh-chrome-extension`), die lokale Brave-Extension erreicht seinen UDS über SSH-Streamlocal-Forwarding auf denselben Pfad.
-- `deploy/vps/cordis.patch.yml` aktiviert `mcp-browser` im VPS-Profil und pinnt `DSH_CHROME_SOCKET=/run/user/1000/dsh-chrome/bridge.sock`; ohne den Pin landet der Socket je nach Startweg in `~/.local/state/dsh-chrome/` (`dsh-web.service` erbt kein `XDG_RUNTIME_DIR`).
+- Neuer Betriebsmodus, dokumentiert in `README.md` und `deploy/`: der `mcp-server` läuft als `dsh`-Kind auf der VPS (hermes-vps, Repo unter `/home/dsh/dsh-chrome-extension`), die lokale Browser-Extension erreicht seinen UDS über SSH-Streamlocal-Forwarding auf denselben Pfad. Zielbrowser ist inzwischen Chrome, nicht Brave.
+- `deploy/vps/cordis.patch.yml` aktiviert `mcp-browser` im VPS-Profil und pinnt `DSH_CHROME_SOCKET` (zuerst `/run/user/1000/dsh-chrome/bridge.sock`, am 02.10. auf `$HOME` korrigiert — siehe Eintrag oben); ohne den Pin landet der Socket je nach Startweg in `~/.local/state/dsh-chrome/` (`dsh-web.service` erbt kein `XDG_RUNTIME_DIR`).
 - `deploy/local/dsh-browser-tunnel.service` hält den Forward dauerhaft (`StreamLocalBindUnlink`, `ExitOnForwardFailure`, Keep-alive, `Restart=always`), `deploy/local/cordis.patch.yml` schaltet das lokale `mcp-browser` ab, weil ein Socket-Pfad nur einen Besitzer haben kann.
 - Verifiziert: Handshake über die Tunnelstrecke liefert `welcome` (protocolVersion 1), VPS-Log `[dsh-browser-mcp] listening on /run/user/1000/dsh-chrome/bridge.sock` und `browser connected`.
 - Fix am nativen Host: der letzte `hello`-Frame wird gemerkt und nach einem Socket-Reconnect erneut geschickt. Vorher lernte der mcp-server eine zurückgekehrte Verbindung nie kennen (er kennt die Extension nur über `hello`), die Extension blieb auf „Waiting for dsh" und der Server hatte keinen `conn`.

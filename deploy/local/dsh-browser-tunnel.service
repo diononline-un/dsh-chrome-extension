@@ -6,8 +6,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-# Ziel-Socket des VPS-mcp-server; der Pfad ist dort per DSH_CHROME_SOCKET
-# gepinnt (siehe deploy/vps/cordis.patch.yml).
+# Ziel-Socket des VPS-mcp-server; der Pfad liegt bewusst unter $HOME des
+# Users dsh, nicht in /run/user/<uid> (siehe deploy/vps/cordis.patch.yml).
 ExecStartPre=/usr/bin/mkdir -p %t/dsh-chrome
 ExecStart=/usr/bin/ssh -N \
   -o BatchMode=yes \
@@ -15,7 +15,7 @@ ExecStart=/usr/bin/ssh -N \
   -o StreamLocalBindUnlink=yes \
   -o ServerAliveInterval=15 \
   -o ServerAliveCountMax=3 \
-  -L %t/dsh-chrome/bridge.sock:/run/user/1000/dsh-chrome/bridge.sock \
+  -L %t/dsh-chrome/bridge.sock:/home/dsh/.local/state/dsh-chrome/bridge.sock \
   dsh-vps
 Restart=always
 RestartSec=5
