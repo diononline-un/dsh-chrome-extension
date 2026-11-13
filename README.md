@@ -54,7 +54,7 @@ Then:
            transport: stdio
            command: /usr/bin/node
            args:
-             - /home/dion/Projekte/dsh-chrome-extension/packages/mcp-server/dist/index.js
+             - ./packages/mcp-server/dist/index.js
            toolCallTimeoutMs: 120000
            reconnect:
              enabled: true
